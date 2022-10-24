@@ -1,3 +1,5 @@
+import { constructProxy } from "./proxy.js";
+
 let uid = 0;
 
 export function initMixin(Cake) {
@@ -6,7 +8,11 @@ export function initMixin(Cake) {
     vm.uid = uid++;
     vm._isCake = true;
 
-    // 初始化数据
+    // 初始化数据data
+    if (options && options.data) {
+      vm._data = constructProxy(vm, options.data, "");
+    }
+
     // 初始化created方法
     // 初始化methods
     // 初始化computed
