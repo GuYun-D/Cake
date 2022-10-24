@@ -14,12 +14,11 @@ function constructObjectProxy(vm, obj, namespace) {
         return obj[prop];
       },
 
-      set(value){
-        // TODO
-        obj[prop] = value
-      }
+      set(value) {
+        console.log(getNameSpace(namespace, prop));
+        obj[prop] = value;
+      },
     });
-
 
     Object.defineProperty(vm, prop, {
       configurable: true,
@@ -27,11 +26,19 @@ function constructObjectProxy(vm, obj, namespace) {
         return obj[prop];
       },
 
-      set(value){
-        // TODO
-        obj[prop] = value
-      }
+      set(value) {
+        console.log(getNameSpace(namespace, prop));
+        obj[prop] = value;
+      },
     });
+
+    if (obj[prop] instanceof Object) {
+      proxyObj[prop] = constructProxy(
+        vm,
+        obj[prop],
+        getNameSpace(namespace, prop)
+      );
+    }
   }
 
   return proxyObj;
@@ -58,5 +65,21 @@ export function constructProxy(vm, obj, namespace) {
     throw new Error("error");
   }
 
-  return proxyObj
+  return proxyObj;
+}
+
+/**
+ * 获命令空间名称
+ * @param {*} nowNameSpace
+ * @param {*} nowProp
+ * @returns
+ */
+function getNameSpace(nowNameSpace, nowProp) {
+  if (nowNameSpace == null || nowNameSpace == "") {
+    return nowProp;
+  } else if (nowProp == null || nowProp == "") {
+    return nowNameSpace;
+  } else {
+    return nowNameSpace + "." + nowProp;
+  }
 }
