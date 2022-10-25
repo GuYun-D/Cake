@@ -1,3 +1,50 @@
+const arrayPrototype = Array.prototype;
+function defArrayFunction(obj, func, namespace, vm) {
+  Object.defineProperty(obj, func, {
+    enumerable: true,
+    configurable: true,
+    value: function (...args) {
+      let original = arrayPrototype[func];
+      const result = original.apply(this, args);
+      // constructObjectProxy();
+      console.log("函数劫持命名空间", getNameSpace(namespace, ""));
+      return result;
+    },
+  });
+}
+
+/**
+ * 代理数组的方法
+ * @param {*} vm
+ * @param {*} arr
+ * @param {*} namespace
+ */
+function proxyArr(vm, arr, namespace) {
+  let obj = {
+    eleType: "Array",
+    toString: function () {
+      let result = "";
+      for (let i = 0; i < arr.length; i++) {
+        result += arr[i] + ", ";
+      }
+      return result.substring(0, result.length - 2);
+    },
+    push() {},
+    pop() {},
+    shift() {},
+    unshift() {},
+  };
+
+  defArrayFunction.call(vm, obj, "push", namespace, vm);
+  defArrayFunction.call(vm, obj, "pop", namespace, vm);
+  defArrayFunction.call(vm, obj, "shift", namespace, vm);
+  defArrayFunction.call(vm, obj, "unshift", namespace, vm);
+
+  arr.__proto__ = obj;
+
+  return arr;
+}
+
 /**
  * 代理对象
  * @param {*} vm 同下
@@ -58,6 +105,16 @@ export function constructProxy(vm, obj, namespace) {
   let proxyObj = null;
 
   if (obj instanceof Array) {
+    // 通过下标对数据进行捕获的方法是无法监听到的，但是可以监听push，shift登方法的调用
+    proxyObj = new Array(obj.length);
+
+    // 对数组元素的修改的监听
+    for (let i = 0; i < obj.length; i++) {
+      proxyObj[i] = constructProxy(vm, obj[i], namespace);
+    }
+
+    // 对数组的修改进行监听
+    // proxyObj = proxyArr(vm, obj, namespace);
   } else if (obj instanceof Object) {
     // 对象代理
     proxyObj = constructObjectProxy(vm, obj, namespace);
